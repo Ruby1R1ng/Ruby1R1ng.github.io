@@ -4,7 +4,7 @@
 
 ## 笔记目录
 
-- [Leetcode Hot100](./notes/leetcode-hot100)
+- [Leetcode Hot100](./notes/leetcode-hot100.md)
 
 ## 关于我
 
