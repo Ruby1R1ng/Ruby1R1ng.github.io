@@ -1,3 +1,8 @@
+  ---
+  title: "git命令"
+  date: 2026-03-04
+  ---
+
 - git pull origin main
   
   从远程仓库 origin 的 main 分支拉取最新代码，并合并到你本地当前分支。
