@@ -1,4 +1,4 @@
-﻿theme = "blowfish"
+theme = "blowfish"
 baseURL = "https://ruby1r1ng.github.io/"
 defaultContentLanguage = "zh-cn"
 enableRobotsTXT = true
