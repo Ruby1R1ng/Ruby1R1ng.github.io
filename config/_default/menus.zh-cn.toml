@@ -1,0 +1,20 @@
+﻿[[main]]
+  name = "首页"
+  pageRef = "/"
+  weight = 10
+
+[[main]]
+  name = "笔记"
+  pageRef = "notes"
+  weight = 20
+
+[[main]]
+  identifier = "github"
+  pre = "github"
+  url = "https://github.com/Ruby1R1ng"
+  weight = 100
+
+[[footer]]
+  name = "标签"
+  pageRef = "tags"
+  weight = 10

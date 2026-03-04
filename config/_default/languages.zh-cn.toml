@@ -1,0 +1,20 @@
+﻿languageCode = "zh-cn"
+languageName = "Simplified Chinese"
+weight = 1
+title = "Ruby1R1ng Notes"
+
+[params]
+  displayName = "中文"
+  isoCode = "zh-cn"
+  rtl = false
+  dateFormat = "2006-01-02"
+  description = "Personal notes and learning logs"
+
+[params.author]
+  name = "Ruby1R1ng"
+  image = "img/blowfish_logo.png"
+  headline = "Learning by writing"
+  bio = "Record notes, projects and technical growth"
+  links = [
+    { github = "https://github.com/Ruby1R1ng" }
+  ]

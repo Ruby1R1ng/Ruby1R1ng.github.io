@@ -1,0 +1,57 @@
+﻿colorScheme = "blowfish"
+defaultAppearance = "light"
+autoSwitchAppearance = true
+enableSearch = true
+enableCodeCopy = true
+enableImageLazyLoading = true
+
+disableImageOptimization = false
+
+defaultBackgroundImage = "/img/background.svg"
+defaultFeaturedImage = "/img/featured.svg"
+defaultSocialImage = "/img/blowfish_banner.png"
+
+mainSections = ["notes"]
+
+[header]
+  layout = "fixed"
+
+[footer]
+  showMenu = true
+  showCopyright = true
+  showThemeAttribution = true
+  showAppearanceSwitcher = true
+  showScrollToTop = true
+
+[homepage]
+  layout = "profile"
+  showRecent = true
+  showRecentItems = 8
+  showMoreLink = true
+  showMoreLinkDest = "notes"
+  cardView = true
+
+[article]
+  showDate = true
+  showDateUpdated = false
+  showAuthor = true
+  showHero = true
+  heroStyle = "background"
+  showBreadcrumbs = true
+  showDraftLabel = true
+  showEdit = false
+  showHeadingAnchors = true
+  showPagination = true
+  showReadingTime = true
+  showTableOfContents = true
+  showTaxonomies = true
+
+[list]
+  showHero = true
+  heroStyle = "background"
+  showBreadcrumbs = true
+  showSummary = true
+  showTableOfContents = false
+  showCards = true
+  groupByYear = false
+  cardView = true

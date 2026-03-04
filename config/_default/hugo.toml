@@ -1,0 +1,27 @@
+﻿theme = "blowfish"
+baseURL = "https://ruby1r1ng.github.io/"
+defaultContentLanguage = "zh-cn"
+enableRobotsTXT = true
+summaryLength = 30
+hasCJKLanguage = true
+enableEmoji = true
+
+[pagination]
+  pagerSize = 10
+
+[imaging]
+  anchor = "Center"
+
+[taxonomies]
+  tag = "tags"
+  category = "categories"
+  author = "authors"
+  series = "series"
+
+[sitemap]
+  changefreq = "weekly"
+  filename = "sitemap.xml"
+  priority = 0.5
+
+[outputs]
+  home = ["HTML", "RSS", "JSON"]
