@@ -4,7 +4,7 @@ weight = 1
 title = "Ruby1R1ng Notes"
 
 [params]
-  displayName = "中文"
+  displayName = "Chinese"
   isoCode = "zh-cn"
   rtl = false
   dateFormat = "2006-01-02"

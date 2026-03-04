@@ -1,10 +1,10 @@
 [[main]]
-  name = "首页"
+  name = "Home"
   pageRef = "/"
   weight = 10
 
 [[main]]
-  name = "笔记"
+  name = "Notes"
   pageRef = "notes"
   weight = 20
 
@@ -15,6 +15,6 @@
   weight = 100
 
 [[footer]]
-  name = "标签"
+  name = "Tags"
   pageRef = "tags"
   weight = 10
