@@ -619,9 +619,10 @@ pop以后需要检查还有没有stack
 #### 示例
 
 ```text
-输入: s = "abcabcbb"
-输出: 3 
-解释: 因为无重复字符的最长子串是 "abc"，所以其长度为 3。注意 "bca" 和 "cab" 也是正确答案。
+输入: s = "pwwkew"
+输出: 3
+解释: 因为无重复字符的最长子串是 "wke"，所以其长度为 3。
+     请注意，你的答案必须是 子串 的长度，"pwke" 是一个子序列，不是子串。
 ```
 
 #### 解题思路
@@ -641,36 +642,144 @@ pop以后需要检查还有没有stack
 #### Python 解答
 
 ```python
-def threeSum(nums):
-    nums.sort()
-    res = []
-    n = len(nums)
+def lengthOfLongestSubstring(s):
+    char_set = set()
+    left = 0
+    max_length = 0
     
-    for i in range(n - 2):
-        # 跳过重复元素
-        if i > 0 and nums[i] == nums[i - 1]:
-            continue
+    for right in range(len(s)):
+        # 如果遇到重复字符，移动左指针
+        while s[right] in char_set:
+            char_set.remove(s[left])
+            left += 1
         
-        left, right = i + 1, n - 1
-        while left < right:
-            total = nums[i] + nums[left] + nums[right]
-            if total < 0:
-                left += 1
-            elif total > 0:
-                right -= 1
-            else:
-                res.append([nums[i], nums[left], nums[right]])
-                # 跳过重复元素
-                while left < right and nums[left] == nums[left + 1]:
-                    left += 1
-                while left < right and nums[right] == nums[right - 1]:
-                    right -= 1
-                left += 1
-                right -= 1
+        char_set.add(s[right])
+        max_length = max(max_length, right - left + 1)
+    
+    return max_length
+```
+#### 小菲の思考
+
+不需要值的时候，直接用set，set添加元素不是append，而是add，删除不是pop而是remove
+
+```python
+while s[right] in char_set:
+    char_set.remove(s[left])
+    left += 1
+```
+意思是：
+
+如果当前要加入的字符 s[right] 已经在窗口里了，说明出现重复。
+
+所以要不断移动左边界，把左边的字符一个个移出去，直到这个重复字符不在窗口里为止。
+
+### 438．找到字符串中所有字母异位词（Find All Anagrams in a String）
+
+#### 题目描述
+
+给定两个字符串 s 和 p，找到 s 中所有 p 的 异位词 的子串，返回这些子串的起始索引。不考虑答案输出的顺序。
+
+#### 示例
+
+```text
+输入: s = "cbaebabacd", p = "abc"
+输出: [0,6]
+解释:
+起始索引等于 0 的子串是 "cba", 它是 "abc" 的异位词。
+起始索引等于 6 的子串是 "bac", 它是 "abc" 的异位词。
+```
+
+#### 解题思路
+
+方法一：
+
+从 s 的每一个可能起点出发，截取一个长度等于 p 的子串，判断这个子串是不是 p 的字母异位词。
+
+方法二：
+
+用一个长度固定为 len(p) 的窗口在 s 上滑动，实时维护窗口内字符频次；只要窗口频次和 p 的频次完全相同，这个窗口就是一个字母异位词。
+
+#### 复杂度分析
+
+方法一：
+- 时间复杂度：O(nm)，其中 n 是字符串 s 的长度, m 是子串 p 长度, 外层一个循环，内层统计切片
+- 空间复杂度：O(m))，切片的长度
+
+方法二：
+- 时间复杂度：O(n)，其中 n 是字符串的长度。每个字符最多被访问两次（左指针和右指针各一次）
+- 空间复杂度：O(min(n, m))，其中 m 是字符集的大小。哈希集合最多存储 min(n, m) 个字符
+
+#### Python 解答
+
+方法一：
+```python
+from collections import Counter
+
+def findAnagrams(self, s: str, p: str) -> List[int]:
+    res = []
+    p_count = Counter(p)
+    length = len(p)
+    
+    for i in range(len(s) - length + 1):
+        if Counter(s[i:i + length]) == p_count:
+            res.append(i)
     
     return res
 ```
 
+方法二：
+```python
+def findAnagrams(self, s: str, p: str) -> List[int]:
+    if len(p) > len(s):
+        return []
+    
+    res = []
+    p_count = [0] * 26
+    window_count = [0] * 26
+    
+    for ch in p:
+        p_count[ord(ch) - ord('a')] += 1
+    
+    left = 0
+    for right in range(len(s)):
+        window_count[ord(s[right]) - ord('a')] += 1
+        
+        if right - left + 1 > len(p):
+            window_count[ord(s[left]) - ord('a')] -= 1
+            left += 1
+        
+        if right - left + 1 == len(p):
+            if window_count == p_count:
+                res.append(left)
+    
+    return res
+```
+#### 小菲の思考
+
+方法一：
+
+`p_count = Counter(p)`统计 p 中每个字符出现的次数。`p = "abc"`，那么`Counter(p) = {'a': 1, 'b': 1, 'c': 1}`
+
+`for i in range(len(s) - length + 1)`中的+1是因为取不到len(s) - length
+
+比如：
+
+s = "cbaebabacd"，长度 10
+
+p = "abc"，长度 3
+
+那么起点 i 最多只能到 7=10-3，但是range取不到7，所以必须+1
+
+字符串切片要用 冒号 :，不是逗号 ,  s[i:i + length]
+
+方法二：
+
+每次循环，都把 s[right] 这个新字符加入窗口。
+```python
+for right in range(len(s)):
+    window_count[ord(s[right]) - ord('a')] += 1
+```
+窗口长度超过 len(p) 要缩小,如果超过了 len(p)，说明窗口太大了，就要把左边的字符移出去：` window_count[ord(s[left]) - ord('a')] -= 1`
 
 ## 报错类型总结
 
