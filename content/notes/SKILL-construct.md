@@ -1,5 +1,5 @@
 ---
-title: "如何为 Claude 构建一个“Skill（技能）”"
+title: "如何为 Claude 构建一个Skill（技能）"
 ---
 
 # 写在开头
