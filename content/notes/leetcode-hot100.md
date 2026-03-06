@@ -844,7 +844,20 @@ def subarraySum(self, nums: List[int], k: int) -> int:
 ```
 #### 小菲の思考
 
-
+我一开始写的暴力解法逻辑是：从每个 left 出发，一直往右加，直到 prefix >= k 就停，但如果后面还有负数，继续往右走，可能又会重新等于 k，你却提前停了。
+```python
+def subarraySum(self, nums: List[int], k: int) -> int:
+    number=0
+    for left in range(len(nums)):
+        prefix=0
+        right = left
+        while prefix < k and right<len(nums) :
+            prefix+=nums[right]
+            right +=1
+            if prefix == k:
+                number+=1
+    return number
+```
 ## 报错类型总结
 
 #### TypeError: Type List cannot be instantiated; use list() instead
