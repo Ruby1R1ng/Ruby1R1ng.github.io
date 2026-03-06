@@ -821,26 +821,19 @@ for right in range(len(s)):
 
 #### Python 解答
 
-方法一：
 ```python
-from collections import defaultdict
-
 def subarraySum(self, nums: List[int], k: int) -> int:
-    count = defaultdict(int)
-    count[0] = 1  # 前缀和为 0，先出现 1 次
-    
+    count = 0
     prefix_sum = 0
-    res = 0
+    hashmap = {0: 1}
     
     for num in nums:
         prefix_sum += num
-        
-        if prefix_sum - k in count:
-            res += count[prefix_sum - k]
-        
-        count[prefix_sum] += 1
+        if prefix_sum - k in hashmap:
+            count += hashmap[prefix_sum - k]
+        hashmap[prefix_sum] = hashmap.get(prefix_sum, 0) + 1
     
-    return res
+    return count
 ```
 #### 小菲の思考
 
@@ -858,6 +851,173 @@ def subarraySum(self, nums: List[int], k: int) -> int:
                 number+=1
     return number
 ```
+
+`hashmap = {0: 1}`用来记录：某个前缀和出现了多少次，`{前缀和 : 出现次数}`
+
+```python
+nums = [1,2,3]
+k = 3
+```
+第一步`prefix_sum = 1`，我们查`prefix_sum - k = 1 - 3 = -2`，hashmap里没有。更新：`{0:1, 1:1}`
+
+第二步`prefix_sum = 3`，我们查`prefix_sum - k = 3 - 3 = 0`，hashmap里有`0:1`，说明有 1个子数组和为 k。这个子数组是：`[1,2]`
+
+如果hashmap = {}，没有`{0:1}`，程序认为 没有子数组和为3。很多前缀和题都要写这一句：`hashmap = {0:1}`
+
+`count += hashmap[prefix_sum - k]` 表示的是：前面有多少个前缀和等于 prefix_sum - k，就有多少个子数组以当前位置结尾、且和为 k。
+
+字典的 get 方法：`dict.get(key, default)`，从字典 hashmap 里取 key 对应的值，如果没有这个键，就返回 0。
+
+### 239．滑动窗口最大值（Sliding Window Maximum）
+
+#### 题目描述
+
+给你一个整数数组 nums，有一个大小为 k 的滑动窗口从数组的最左侧移动到数组的最右侧。你只可以看到在滑动窗口内的 k 个数字。滑动窗口每次只向右移动一位。
+
+返回 滑动窗口中的最大值 。
+
+#### 示例
+
+```text
+输入：nums = [1,3,-1,-3,5,3,6,7], k = 3
+输出：[3,3,5,5,6,7]
+解释：
+滑动窗口的位置                最大值
+---------------               -----
+[1  3  -1] -3  5  3  6  7       3
+ 1 [3  -1  -3] 5  3  6  7       3
+ 1  3 [-1  -3  5] 3  6  7       5
+ 1  3  -1 [-3  5  3] 6  7       5
+ 1  3  -1  -3 [5  3  6] 7       6
+ 1  3  -1  -3  5 [3  6  7]      7
+```
+
+#### 解题思路
+
+单调队列（双端队列）：希望队列里始终保存“当前窗口内可能成为最大值的元素下标”，并且让这些下标对应的值保持 从大到小单调递减。
+
+队头永远是当前窗口最大值的下标
+
+每次窗口右移时：
+
+先把不在窗口内的下标从队头删掉
+
+再把所有比当前元素小的下标从队尾删掉
+
+把当前下标加入队尾
+
+当窗口形成后，队头对应的值就是最大值
+
+以：
+
+```python
+nums = [1,3,-1,-3,5,3,6,7], k = 3
+```
+为例。
+
+i = 0, nums[i] = 1，队列空，直接加入 0
+  
+队列下标: [0]， 对应值: [1]
+
+i = 1, nums[i] = 3，当前值 3 比队尾下标 0 对应值 1 大，说明 1 不可能再成为最大值，删掉。加入 1
+
+队列下标: [1]，对应值: [3]
+
+i = 2, nums[i] = -1，-1 小于队尾值 3，直接加入。
+
+队列下标: [1,2]，对应值: [3,-1]，此时窗口形成 [0,2]，最大值就是队头对应的 3
+
+i = 3, nums[i] = -3先检查队头是否过期。队头下标 1 还在窗口 [1,3] 内，不删。-3 小于队尾值 -1，直接加入。
+
+队列下标: [1,2,3]，对应值: [3,-1,-3]，最大值还是 3
+
+i = 4, nums[i] = 5先删过期元素：队头 1 已不在窗口 [2,4] 中，删掉。然后从队尾开始删比 5 小的：
+
+删 3（值 -3）
+
+删 2（值 -1）
+
+加入 4
+
+队列下标: [4]，对应值: [5]，最大值是 5
+
+#### 复杂度分析
+
+- 时间复杂度：O(n)，虽然有两个 while，但每个元素最多：进队一次，出队一次，所以总操作次数是线性的。
+- 空间复杂度：O(k)，队列里最多保存当前窗口内的下标
+
+#### Python 解答
+
+```python
+from collections import deque
+def maxSlidingWindow(self, nums: List[int], k: int) -> List[int]:
+    q = deque()   # 存下标
+    res = []
+
+    for i in range(len(nums)):
+        # 1. 删除已经滑出窗口的下标
+        while q and q[0] < i - k + 1:
+            q.popleft()
+
+        # 2. 维持单调递减队列
+        while q and nums[q[-1]] < nums[i]:
+            q.pop()
+
+        # 3. 当前下标入队
+        q.append(i)
+
+        # 4. 当窗口形成后，记录最大值
+        if i >= k - 1:
+            res.append(nums[q[0]])
+
+    return res
+```
+#### 小菲の思考
+
+双指针通常适合处理这类问题：区间和、区间长度、满足某种单调性质的区间，因为左右指针移动时，区间信息可以比较容易更新。但是“区间最大值”不一样，删除左边一个数时可能删掉的是最大值
+
+deque() 是 Python 里的 双端队列。两端都可以高效地插入和删除的队列。
+
+普通队列一般是：一端进一端出
+
+但 deque 可以：左边插入、左边删除、右边插入、右边删除，所以叫“双端队列”。
+
+常用操作：
+
+右边加入：`q.append(3)`，左边加入：`q.appendleft(3)`，右边删除：`q.pop()`，右边删除：`q.popleft()`
+
+因为滑动窗口最大值这题需要：队尾不断删掉较小元素，队头删掉已经过期的元素，队尾加入新元素，也就是同时要操作两端。所以 deque 非常适合。
+
+### 76．最小覆盖子串（Minimum Window Substring）
+
+#### 题目描述
+
+给定两个字符串 s 和 t，长度分别是 m 和 n，返回 s 中的 最短窗口 子串，使得该子串包含 t 中的每一个字符（包括重复字符）。如果没有这样的子串，返回空字符串 ""。
+
+#### 示例
+
+```text
+输入：s = "ADOBECODEBANC", t = "ABC"
+输出："BANC"
+解释：最小覆盖子串 "BANC" 包含来自字符串 t 的 'A'、'B' 和 'C'。
+```
+
+#### 解题思路
+
+用两个指针 left 和 right 表示一个窗口 [left, right]，不断移动右指针扩大窗口，直到窗口已经包含了 t 所有需要的字符；然后再移动左指针缩小窗口，尽量把窗口缩到最短。
+
+#### 复杂度分析
+
+- 时间复杂度：O(n)，虽然有两个 while，但每个元素最多：进队一次，出队一次，所以总操作次数是线性的。
+- 空间复杂度：O(k)，队列里最多保存当前窗口内的下标
+
+#### Python 解答
+
+```python
+
+```
+#### 小菲の思考
+
 ## 报错类型总结
 
 #### TypeError: Type List cannot be instantiated; use list() instead
