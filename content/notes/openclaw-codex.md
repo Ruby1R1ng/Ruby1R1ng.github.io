@@ -8,8 +8,6 @@ title：安装使用openclaw
 
 <img width="757" height="443" alt="image" src="https://github.com/user-attachments/assets/65df0af6-c168-440c-ac65-85aca4d64087" />
 
-10min安装好
-
 <img width="494" height="475" alt="image" src="https://github.com/user-attachments/assets/f9f771f1-8169-45b0-a306-889cfcaaee54" />
 
 `OpenClaw` 有两种可以直接打开的“客户端”形态：
@@ -34,3 +32,18 @@ openclaw tui
 第185期的automatica的前50篇的标题，作者以及标题翻译后中文做成ppt，可以按照适当格式一页ppt放几个标题，不需要配图，学术风格即可
 
 <img width="916" height="620" alt="image" src="https://github.com/user-attachments/assets/86d5ae4c-adca-49aa-838c-816e7ac991e8" />
+
+如何在 Finder 里打开这个文件夹
+
+```text
+open /Users/faker/.openclaw/workspace
+```
+## 问题解决
+
+有些标题太长了，就会出现标题和作者列表重合情况，请修改，能否一次性解决这种情况使得下次再制作标题ppt的时候不会遇到这种情况
+
+<img width="1496" height="789" alt="image" src="https://github.com/user-attachments/assets/a1cd0b24-d3c3-4e8f-a416-ed87ce808ea6" />
+
+<img width="958" height="636" alt="image" src="https://github.com/user-attachments/assets/8e8aa6d8-d03e-4846-862f-04d0f5bb81e8" />
+
+
