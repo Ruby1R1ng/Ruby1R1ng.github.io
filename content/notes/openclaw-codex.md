@@ -1,5 +1,5 @@
 ---
-title：安装使用openclaw
+title: "安装使用openclaw"
 ---
 
 # 安装openclaw及配置
