@@ -1,5 +1,5 @@
 ---
-title：RAG学习笔记
+title: "RAG学习笔记"
 ---
 
 # Codex Cookbook
