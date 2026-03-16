@@ -1,6 +1,7 @@
 ---
 title: "安装使用openclaw"
 ---
+
 # 安装openclaw及配置
 
 直接使用codex安装openclaw，因为我自己订购了ChatGPT Plus, 所以可以openclaw可以直接接入openai的api
