@@ -1,3 +1,7 @@
+---
+title: "论文阅读"
+---
+
 # 《Data Shapley in One Training Run》
 
 https://jiachen-t-wang.github.io/data-shapley.github.io/
