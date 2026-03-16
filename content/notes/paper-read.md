@@ -4,6 +4,8 @@ title: "论文阅读"
 
 # 《Data Shapley in One Training Run》
 
+{{< katex >}}
+
 https://jiachen-t-wang.github.io/data-shapley.github.io/
 
 目标：衡量训练数据里“每一条数据”到底对模型有多大贡献，而且尽量只用一次训练过程就算出来。
