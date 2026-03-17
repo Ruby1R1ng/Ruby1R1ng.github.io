@@ -992,7 +992,7 @@ deque() 是 Python 里的 双端队列。两端都可以高效地插入和删除
 
 #### 题目描述
 
-给定两个字符串 s 和 t，长度分别是 m 和 n，返回 s 中的 最短窗口 子串，使得该子串包含 t 中的每一个字符（包括重复字符）。如果没有这样的子串，返回空字符串 ""。
+给定两个字符串 s 和 t，长度分别是 m 和 n，返回 s 中的最短窗口子串，使得该子串包含 t 中的每一个字符（包括重复字符）。如果没有这样的子串，返回空字符串 ""。
 
 #### 示例
 
@@ -1008,15 +1008,93 @@ deque() 是 Python 里的 双端队列。两端都可以高效地插入和删除
 
 #### 复杂度分析
 
-- 时间复杂度：O(n)，虽然有两个 while，但每个元素最多：进队一次，出队一次，所以总操作次数是线性的。
-- 空间复杂度：O(k)，队列里最多保存当前窗口内的下标
+- 时间复杂度：时间复杂度：O(m + n), 其中m = len(s), n = len(t)统计 t 需要 O(n)，右指针 right 最多走 m 次，左指针 left 也最多走 m 次，虽然有 while，但左右指针总共都只会各走一遍，所以总复杂度是：
+- 空间复杂度：O(k)，其中 k 是字符种类数。我们用了两个哈希表：need、window，它们存储的是字符计数
 
 #### Python 解答
 
 ```python
+from collections import defaultdict
 
+class Solution:
+    def minWindow(self, s: str, t: str) -> str:
+        if len(t) > len(s):
+            return ""
+
+        need = defaultdict(int)
+        window = defaultdict(int)
+
+        # 统计 t 中每个字符需要的次数
+        for ch in t:
+            need[ch] += 1
+
+        left = 0
+        valid = 0
+
+        start = 0          # 记录最短子串起点
+        min_len = float('inf')   # 记录最短子串长度
+
+        # right 表示将要加入窗口的字符位置
+        for right in range(len(s)):
+            c = s[right]
+
+            # 扩大窗口：加入右边字符
+            if c in need:
+                window[c] += 1
+                if window[c] == need[c]:
+                    valid += 1
+
+            # 当窗口已经覆盖 t 时，开始收缩左边界
+            while valid == len(need):
+                # 更新最短子串
+                if right - left + 1 < min_len:
+                    start = left
+                    min_len = right - left + 1
+
+                d = s[left]
+                left += 1
+
+                # 左边字符离开窗口
+                if d in need:
+                    if window[d] == need[d]:
+                        valid -= 1
+                    window[d] -= 1
+
+        return "" if min_len == float('inf') else s[start:start + min_len]
+```
+
+小菲自己的版本：
+
+```python
+class Solution:
+    def minWindow(self, s: str, t: str) -> str:
+        from collections import Counter
+        window = Counter()
+        need = Counter(t)
+        left = 0
+        start = 0
+        min_len = float("inf")
+
+        for right in range(len(s)):
+            ch = s[right]
+            if ch in need:
+                window[ch] += 1
+
+            while window >= need:
+                if right - left + 1 < min_len:
+                    min_len = right - left + 1
+                    start = left
+
+                d = s[left]
+                left += 1
+                if d in need:
+                    window[d] -= 1
+
+        return "" if min_len == float("inf") else s[start:start + min_len]
 ```
 #### 小菲の思考
+
+我采用的是counter直接计数每个字符出现的个数，只有counter可以比较 window >= need，意思是对 need 中每个字符，都有 `window[ch] >= need[ch]`，defaultdict不行
 
 ## 报错类型总结
 
