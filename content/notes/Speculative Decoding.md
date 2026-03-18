@@ -2,9 +2,9 @@
 title: "Speculative Decoding"
 ---
 
-# Speculative Decoding 推测解码方案详解
-
 {{< katex >}}
+
+# Speculative Decoding 推测解码方案详解
 
 原文来源：https://github.com/cr7258/ai-infra-learning/tree/main/lesson/04-speculative-decoding
 
