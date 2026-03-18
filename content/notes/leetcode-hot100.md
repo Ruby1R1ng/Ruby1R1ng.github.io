@@ -1096,6 +1096,109 @@ class Solution:
 
 我采用的是counter直接计数每个字符出现的个数，只有counter可以比较 window >= need，意思是对 need 中每个字符，都有 `window[ch] >= need[ch]`，defaultdict不行
 
+## 五、普通数组
+
+### 53. 最大子数组和（Maximum Subarray）
+
+#### 题目描述：
+
+给你一个整数数组 `nums`，请你找出一个具有最大和的**连续子数组**（子数组最少包含一个元素），返回其最大和。
+
+**子数组** 是数组中的一个连续部分。
+
+#### 示例：
+
+```text
+输入：nums = [-2,1,-3,4,-1,2,1,-5,4]
+输出：6
+解释：连续子数组 [4,-1,2,1] 的和最大，为 6。
+
+#### 解题思路：
+
+<img width="1284" height="1015" alt="image" src="https://github.com/user-attachments/assets/f3d6bc91-e5aa-4d6b-aa8d-02138d4c2269" />
+
+每次多一个元素的时候，其实只需要计算以当前这个元素结尾的子数组和的最大值就可以了，也就是每多一个元素，就可以把计算分为两部分，将以这个元素结尾的最大子数组和（之前的全局最大子数组和+该数字本身/该数字本身）和 与 之前的全局最大子数组和比较。
+
+<img width="842" height="369" alt="image" src="https://github.com/user-attachments/assets/6c7397ac-d450-476e-9b0a-35998e943501" />
+
+定义dp[i]为以当前元素结尾的最大子数组和
+
+动态规划（Kadane 算法）：
+
+1. 定义 `dp[i]` 为以第 i 个元素结尾的最大子数组和
+2. 状态转移方程：`dp[i] = max(nums[i], dp[i-1] + nums[i])`
+3. 可以优化空间复杂度，只使用一个变量
+
+#### 复杂度分析：
+
+- 时间复杂度：O(n)，其中 n 是数组的长度
+- 空间复杂度：O(1)，只需要常数的额外空间（优化后）
+
+#### Python 解答：
+
+```python
+def maxSubArray(nums):
+    max_sum = current_sum = nums[0]
+    
+    for i in range(1, len(nums)):
+        current_sum = max(nums[i], current_sum + nums[i])
+        max_sum = max(max_sum, current_sum)
+    
+    return max_sum
+```
+#### 小菲の思考
+
+这道题还不能用滑动窗口算法，因为数组中的数字可以是负数。
+
+滑动窗口算法无非就是双指针形成的窗口扫描整个数组/子串，但关键是，你得清楚地知道什么时候应该移动右侧指针来扩大窗口，什么时候移动左侧指针来减小窗口。
+
+而对于这道题目，当窗口扩大的时候可能遇到负数，窗口中的值也就可能增加也可能减少，这种情况下不知道什么时机去收缩左侧窗口，也就无法求出「最大子数组和」。
+
+### 56. 合并区间 (Merge Intervals)
+
+#### 题目描述：
+
+以数组 `intervals` 表示若干个区间的集合，其中单个区间为 `intervals[i] = [starti, endi]`。请你合并所有重叠的区间，并返回一个不重叠的区间数组，该数组需恰好覆盖输入中的所有区间。
+
+#### 示例：
+
+```
+输入：intervals = [[1,3],[2,6],[8,10],[15,18]]
+输出：[[1,6],[8,10],[15,18]]
+解释：区间 [1,3] 和 [2,6] 重叠, 将它们合并为 [1,6]。
+```
+
+#### 解题思路：
+
+排序 + 贪心：
+
+1. 按区间的起始位置排序
+2. 遍历区间，如果当前区间与结果中最后一个区间重叠，则合并
+3. 否则，将当前区间加入结果
+
+#### 复杂度分析：
+
+- 时间复杂度：O(n log n)，排序的时间复杂度
+- 空间复杂度：O(1)，不考虑结果存储的空间
+
+#### Python 解答：
+
+```python
+def merge(intervals):
+    intervals.sort(key=lambda x: x[0])
+    result = [intervals[0]]
+    
+    for interval in intervals[1:]:
+        if interval[0] <= result[-1][1]:
+            result[-1][1] = max(result[-1][1], interval[1])
+        else:
+            result.append(interval)
+    
+    return result
+```
+
+#### 小菲の思考
+
 ## 报错类型总结
 
 #### TypeError: Type List cannot be instantiated; use list() instead
