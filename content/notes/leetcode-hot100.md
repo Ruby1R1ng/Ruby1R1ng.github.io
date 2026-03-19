@@ -1184,20 +1184,111 @@ def maxSubArray(nums):
 #### Python 解答：
 
 ```python
-def merge(intervals):
-    intervals.sort(key=lambda x: x[0])
-    result = [intervals[0]]
-    
-    for interval in intervals[1:]:
-        if interval[0] <= result[-1][1]:
-            result[-1][1] = max(result[-1][1], interval[1])
-        else:
-            result.append(interval)
-    
-    return result
+class Solution:
+    def merge(self, intervals: list[list[int]]) -> list[list[int]]:
+        # 先按区间左端点排序
+        intervals.sort(key=lambda x: x[0])
+
+        # 结果数组，先放入第一个区间
+        res = [intervals[0]]
+
+        # 遍历后面的区间
+        for start, end in intervals[1:]:
+            last_end = res[-1][1]
+
+            # 如果重叠，就合并，合并后的右端点要取更大的那个。
+            if start <= last_end:
+                res[-1][1] = max(last_end, end)
+            else:
+                # 不重叠，直接加入结果
+                res.append([start, end])
+
+        return res
 ```
 
 #### 小菲の思考
+
+怎么判断两个区间是否重叠
+
+假设现在有两个区间：[a, b]  [c, d]，如果第二个区间的起点 c <= b，说明它和前一个区间有重叠。
+
+intervals 是列表，里面的每个元素也都是一个小列表。sort() 把列表本身直接排序。
+
+lambda x: x[0] 是一个匿名函数，把它理解成：
+```python
+def f(x):
+    return x[0]
+```
+
+所以intervals.sort(key=lambda x: x[0])就是让区间按起点从小到大排列
+
+result[-1][1]表示最后一个区间的右端点
+
+### 189. 轮转数组
+
+#### 题目描述：
+
+给定一个整数数组 nums，将数组中的元素向右轮转 k 个位置，其中 k 是非负数。
+
+#### 示例：
+
+```
+输入: nums = [1,2,3,4,5,6,7], k = 3
+输出: [5,6,7,1,2,3,4]
+解释:
+向右轮转 1 步: [7,1,2,3,4,5,6]
+向右轮转 2 步: [6,7,1,2,3,4,5]
+向右轮转 3 步: [5,6,7,1,2,3,4]
+```
+
+#### 解题思路：
+
+排序 + 贪心：
+
+1. 按区间的起始位置排序
+2. 遍历区间，如果当前区间与结果中最后一个区间重叠，则合并
+3. 否则，将当前区间加入结果
+
+#### 复杂度分析：
+
+- 时间复杂度：O(n log n)，排序的时间复杂度
+- 空间复杂度：O(1)，不考虑结果存储的空间
+
+#### Python 解答：
+
+```python
+class Solution:
+    def merge(self, intervals: list[list[int]]) -> list[list[int]]:
+        # 先按区间左端点排序
+        intervals.sort(key=lambda x: x[0])
+
+        # 结果数组，先放入第一个区间
+        res = [intervals[0]]
+
+        # 遍历后面的区间
+        for start, end in intervals[1:]:
+            last_end = res[-1][1]
+
+            # 如果重叠，就合并，合并后的右端点要取更大的那个。
+            if start <= last_end:
+                res[-1][1] = max(last_end, end)
+            else:
+                # 不重叠，直接加入结果
+                res.append([start, end])
+
+        return res
+```
+
+#### 小菲の思考
+
+deque() 是 Python 里的 双端队列。两端都可以高效地插入和删除的队列。普通队列一般是：一端进一端出。但 deque 可以：左边插入、左边删除、右边插入、右边删除，所以叫“双端队列”。
+
+常用操作：右边加入：`q.append(3)`，左边加入：`q.appendleft(3)`，右边删除：`q.pop()`，右边删除：`q.popleft()`
+
+set添加元素不是append，而是add，删除不是pop而是remove
+
+list 支持这些操作：在末尾添加元素：append()，删除末尾元素：pop()
+
 
 ## 报错类型总结
 
