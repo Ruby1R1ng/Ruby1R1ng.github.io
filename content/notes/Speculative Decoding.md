@@ -1107,3 +1107,11 @@ $$
 - Andrej Karpathy X：https://x.com/karpathy/status/1697318534555336961
 - Lookahead Decoding 图文详解：https://zhuanlan.zhihu.com/p/701015670
 
+# 《Fast Inference from Transformers via Speculative Decoding》
+
+Appendix A.1
+
+虽然算法不是直接从目标分布 \(p(x)\) 采样，而是先从草稿分布 \(q(x)\) 猜一个 token，再决定接受还是拒绝，但最后输出的 token 的分布，仍然严格等于 \(p(x)\)。
+
+也就是说，**speculative sampling** 并没有改变最终采样结果的概率分布。
+
