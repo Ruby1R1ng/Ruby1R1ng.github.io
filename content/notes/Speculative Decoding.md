@@ -1115,6 +1115,46 @@ Appendix A.1
 
 也就是说，**speculative sampling** 并没有改变最终采样结果的概率分布。
 
+证明：
+\[
+We will now show that for any distributions \(p(x)\) and \(q(x)\), the tokens sampled via speculative sampling from \(p(x)\) and \(q(x)\) are distributed identically to those sampled from \(p(x)\) alone. Let \(\beta\) be the acceptance probability (Definition 3.1).
+
+Note that as
+\[
+p'(x) = \text{norm}\left(\max(0, p(x) - q(x))\right) = \frac{p(x) - \min(q(x), p(x))}{\sum_{x'} (p(x') - \min(q(x'), p(x')))} = \frac{p(x) - \min(q(x), p(x))}{1 - \beta},
+\]
+the normalizing constant for the adjusted distribution \(p'(x)\) is \(1 - \beta\), where the last equation follows immediately from Lemma 3.3 and Theorem 3.5.
+
+由于 \(\max (0, a-b)=a-\min (a, b)\) ， “norm” 的意思就是：把一个非负函数除以它在全体 token 上的总和，使它变成一个概率分布。所以分母自然就是：
+\[
+\sum_{x'} \left(p(x') - \min(q(x'), p(x'))\right)
+\]
+
+Now:
+\[
+P(x = x') = P(\text{guess accepted}, x = x') + P(\text{guess rejected}, x = x')
+\]
+因为最终输出 \(x = x'\) 只有两种可能：
+
+- 要么这个 \(x'\) 是一开始从 \(q\) 猜出来，然后被接受了
+- 要么一开始的猜测被拒绝了，之后从 \(p'\) 里重新采样，结果采到了 \(x'\)
+
+Where:
+\[
+P(\text{guess accepted}, x = x') = q(x') \min\left(1, \frac{p(x')}{q(x')}\right) = \min(q(x'), p(x'))
+\]
+
+And:
+\[
+P(\text{guess rejected}, x = x') = (1 - \beta) p'(x') = p(x') - \min(q(x'), p(x'))
+\]
+
+Overall:
+\[
+P(x = x') = \min(p(x'), q(x')) + p(x') - \min(p(x'), q(x')) = p(x').
+\]
+\]
+
 标准拒绝采样：
 
 1.  先从提议分布 \(q(x)\) 采样
@@ -1126,12 +1166,11 @@ Appendix A.1
 
 1.  先从 \(q(x)\) 采样
 2.  以概率 \(\min(1, p(x)/q(x))\) 接受
-3.  如果拒绝，**不是重新从 \(q\) 采**，而是从一个修正分布
-    \[
+3.  如果拒绝，**不是重新从 \(q\) 采**，而是从一个修正分布去采
+    \(
     p'(x) = \text{norm}\left(\max(0, p(x) - q(x))\right)
-    \]
-    去采
-
+    \)
+   
 所以它的关键区别是：
 
 拒绝以后，不回到原来的 proposal \(q\)，而是去一个“剩余概率质量分布” \(p'\) 中补采样。
@@ -1165,12 +1204,12 @@ $\square$
 所以必须只接受其中一部分。
 
 接受概率设成
-\[
+\(
 \frac{p(x)}{q(x)}
-\]
+\)
 这样一来，“最终通过接受机制保留下来的 \(x\) 的概率”就变成
-\[
+\(
 q(x) \cdot \frac{p(x)}{q(x)} = p(x).
-\]
-这就刚好不多不少。
+\)
+
 
