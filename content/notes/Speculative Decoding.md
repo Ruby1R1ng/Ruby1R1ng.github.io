@@ -1107,6 +1107,431 @@ $$
 - Andrej Karpathy X：https://x.com/karpathy/status/1697318534555336961
 - Lookahead Decoding 图文详解：https://zhuanlan.zhihu.com/p/701015670
 
+# 《When Drafts Evolve: Speculative Decoding Meets Online Learning》
+
+> 大模型生成慢，根本原因是自回归的串行性。  
+> speculative decoding 的基本思路，是让一个小模型先生成一段草稿，再由大模型并行验证。  
+> 传统方法通常把草稿模型当成固定不变的，但这篇文章注意到：每一轮验证其实都已经告诉了我们草稿模型哪里错了，这就是免费的交互反馈。  
+> 作者进一步指出，这个“草稿提交 - 目标验证 - 草稿更新”的过程，天然就是一个在线学习过程。  
+> 所以他们提出 OnlineSPEC，把草稿模型视为 online learner，把目标模型视为 environment，把验证反馈写成 loss function，再用 regret 来分析系统性能。  
+> 理论上，他们证明了 dynamic regret 越小，累计 accepted length 越长；而 accepted length 越长，最终 acceleration rate 越高。  
+> 在算法上，他们分别用 OGD、optimistic online learning 和 ensemble learning 给出了三个实例化版本，适应从平稳环境到剧烈漂移环境的不同场景。  
+> 所以这篇文章最重要的意义不是发明了新的 speculative decoding 结构，而是给“在线更新 draft model”这件事提供了统一框架和理论依据。
+
+
+### 算法
+--------
+
+在第  $t$  轮：
+
+#### 第一步：小模型生成  $k$  个草稿 token
+
+当前小模型参数是  $w_t$ ，它按顺序生成：
+
+$$
+x_1,x_2,\dots,x_k
+$$
+
+每个 token 都来自 draft distribution：
+
+$$
+q_{w_t}(x_i \mid x_{<i})
+$$
+
+这里  $q_{w_t}$  是小模型分布。
+
+#### 第二步：大模型并行验证
+
+目标模型  $v$  计算：
+
+$$
+p_v(x_1\mid x_{<1}), \dots, p_v(x_k\mid x_{<k})
+$$
+
+这里  $p_v$  是目标模型分布。
+
+注意：
+
+*   小模型是“生成”
+*   大模型是“验证”
+*   验证可以并行，所以快很多
+
+#### 第三步：决定接受多少个 token
+
+作者定义了本轮接受长度  $n_t$ ：
+
+*   前面连续通过验证的 token 都接受；
+*   到某个位置开始不可信，就停下。
+
+所以  $n_t$  表示：
+
+> **这一轮 draft sequence 里，有多少个 token 最终被接受。**
+
+这个量非常关键，因为它直接决定了加速效果。
+
+#### 第四步：如果中间出错，就修正下一个 token
+
+如果第  $n_t+1$  个 token 没通过，大模型不会简单停住，而是从一个修正后的分布  $p'(x)$  里采样下一个 token，保证整体生成分布仍然正确。
+
+这一点是 speculative sampling 里的标准做法：  
+它的作用是确保**加速不改变最终分布**。
+
+#### 第五步：把验证反馈当成 loss，更新 draft model
+
+7.1 token 级别的接受率
+----------------
+
+论文定义：
+
+$$
+\mathrm{Acc}_t \coloneqq \mathbb{E}_{x\sim q_{w_t}} \left[ \min\left\{1,\frac{p_v(x\mid \mathbf{x})}{q_{w_t}(x\mid \mathbf{x})}\right\} \right]
+$$
+
+直观上它表示：
+
+> 在第  $t$  轮，draft model 提出的一个 token，被目标模型接受的平均概率。
+
+这里：
+
+*   如果  $q_{w_t}$  和  $p_v$  很接近，接受率就高；
+*   如果差得很远，接受率就低。
+
+* * *
+
+7.2 sequence 级别的接受长度
+--------------------
+
+如果每轮草稿长为  $k$ ，那本轮被接受的 token 个数记为  $n_t$ 。
+
+最终整个输出长度满足：
+
+$$
+|\hat{\mathbf{x}}|=\sum_{t=1}^T n_t
+$$
+
+所以期望长度是：
+
+$$
+\mathbb{E}[|\hat{\mathbf{x}}|] = \sum_{t=1}^T \mathbb{E}[n_t]
+$$
+
+这个量越大，说明：
+
+*   每轮被接受的 token 越多；
+*   每次 target model 验证越“值”；
+*   整体速度越高。
+
+作者选的 loss 是**交叉熵损失**：
+
+$$
+f_t(w)= -\mathbb{E}_{x\sim p_v(\cdot\mid \mathbf{x})}[\log q_w(x\mid \mathbf{x})]
+$$
+
+这其实就是在问：
+
+> 用 draft model  $q_w$  去拟合 target distribution  $p_v$ ，拟合得好不好？
+
+而交叉熵和 KL 的关系是：
+
+$$
+f_t(w) = H(p_v)+\mathrm{KL}(p_v\|q_w)
+$$
+
+这里  $H(p_v)$  对  $w$  不变，所以最小化  $f_t(w)$  本质上就是最小化
+
+$$
+\mathrm{KL}(p_v\|q_w)
+$$
+
+于是逻辑就通了：
+
+*   online learning 让 regret 变小
+*   regret 小说明 cumulative loss 小
+*   loss 小说明 draft 分布更接近 target 分布
+*   分布更接近说明 total variation 更小
+*   TV 更小说明接受率更高
+*   接受率更高说明 accepted length 更长
+*   accepted length 更长说明 acceleration rate 更高
+
+论文的 Lemma 1 说，在它的假设下，
+
+$$
+\widetilde{\Omega}\!\left( \left(1-\frac{1}{1+k}\right)\frac{T^{3/2}}{\sqrt{\mathrm{Reg}_T}} +T \right) \le \mathbb{E}[|\hat{\mathbf{x}}|] \le kT
+$$
+
+你组会里不一定要把每个常数讲死，但一定要讲清楚**它是什么意思**。
+
+* * *
+
+9.1 上界为什么是  $kT$ 
+-----------------
+
+这个最简单。
+
+因为：
+
+*   每轮最多接受  $k$  个 token
+*   一共  $T$  轮
+
+所以总接受长度最多就是：
+
+$$
+kT
+$$
+
+这个没有悬念。
+
+* * *
+
+9.2 下界为什么和 regret 有关
+--------------------
+
+最重要的是下界。
+
+它告诉你：
+
+> **如果在线学习的动态 regret 小，那么整个推测解码过程中累计被接受的 token 会更多。**
+
+也就是：
+
+*   regret 越小
+*    $\sqrt{\mathrm{Reg}_T}$  越小
+*   下界越大
+*   accepted length 越长
+
+直观意思是：
+
+> draft model 跟 target model 的分布差距，被 regret 控制住了；  
+> 差距越小，target model 越愿意接受 draft token。
+
+十、Theorem 1：加速率和 regret 的正式关系
+=============================
+
+论文定义加速率
+
+$$
+\gamma=\frac{A\cdot \mathbb{E}[|\hat{\mathbf{x}}|]}{akT+AT}
+$$
+
+这里：
+
+*    $A$ ：target model 每次验证的时间
+*    $a$ ：draft model 生成一个 token 的时间
+*    $k$ ：每轮 draft 长度
+*    $T$ ：总轮数
+
+这个式子其实很自然：
+
+分子：不用 speculative 时的总成本
+-----------------------
+
+如果完全用 target model 自回归生成，生成  $\mathbb{E}[|\hat{\mathbf{x}}|]$  个 token，成本大约是
+
+$$
+A\cdot \mathbb{E}[|\hat{\mathbf{x}}|]
+$$
+
+分母：用了 speculative 后的总成本
+-----------------------
+
+每轮要做两件事：
+
+*   draft model 生成  $k$  个 token：成本  $ak$ 
+*   target model 验证一次：成本  $A$ 
+
+所以  $T$  轮总成本是
+
+$$
+akT+AT
+$$
+
+两者一除，就是加速比。
+
+* * *
+
+10.1 定理结论怎么读
+------------
+
+Theorem 1 给出：
+
+$$
+\gamma \ge \widetilde{\Omega}\!\left( \frac{1-1/k}{(\alpha k+1)\sqrt{\mathrm{Reg}_T/T}} \right), \qquad \gamma \le \frac{k}{\alpha k+1}
+$$
+
+其中
+
+$$
+\alpha=\frac{a}{A}\ll 1
+$$
+
+表示 draft 比 target 快很多。
+
+* * *
+
+10.2 这条定理的直观解释
+--------------
+
+这条定理说明加速率取决于三件事：
+
+### 第一，regret 要小
+
+regret 小，说明 draft 在线适应得好，分布越来越接近 target，于是接受率更高。
+
+### 第二，draft 要足够快
+
+$$
+\alpha=\frac{a}{A}
+$$
+
+越小越好。  
+也就是 draft model 越便宜越好。
+
+### 第三，candidate length  $k$  要合适
+
+ $k$  不能瞎大：
+
+*   太小：每轮并行收益不够
+*   太大：草稿后面更容易错，验证浪费更多
+
+所以存在一个折中。
+
+十一、Section 3：怎么把 online learning 真正用进来
+======================================
+
+这篇文章不只是提出框架，还给了三个实例化方法。
+
+* * *
+
+11.1 Online-LR：最基本的 OGD 更新
+--------------------------
+
+先用最经典的 Online Gradient Descent：
+
+$$
+w_{t+1} = \Pi_{\mathcal W}\bigl[w_t-\eta \nabla f_t(w_t)\bigr]
+$$
+
+直观上：
+
+*   看当前 loss 的梯度
+*   朝让 loss 下降的方向走一步
+
+这相当于：
+
+> 每次 target model 验证完以后，小模型做一次在线微调。
+
+* * *
+
+11.2 Opt-Hydra：加入 optimism
+--------------------------
+
+作者接着说，光用当前梯度还不够，还可以利用**历史梯度**来预测下一轮更新方向。
+
+更新分两步：
+
+$$
+w_t=\Pi_{\mathcal W}[\tilde w_t-\eta h_t],\qquad \tilde w_{t+1}=\Pi_{\mathcal W}[\tilde w_t-\eta \nabla f_t(w_t)]
+$$
+
+这里  $h_t$  是 hint，也就是对未来梯度的预测。
+
+他们用的一个简单做法是：
+
+*   直接拿上一轮梯度当 hint
+
+直觉是：
+
+> 相邻用户输入通常有局部相似性，上一轮的更新方向对下一轮有参考价值。
+
+如果 hint 很准，就能比普通 OGD 更快适应。
+
+* * *
+
+11.3 Ens-Eagle：在线集成多个 draft model
+---------------------------------
+
+再进一步，作者注意到：
+
+*   环境有时平稳
+*   有时剧烈变化
+*   一个固定学习率很难在所有情况下都最好
+
+所以他们维护多个 base learners：
+
+$$
+\{w_t^1,\dots,w_t^N\}
+$$
+
+每个 learner 用不同学习率。  
+然后用一个 meta learner 给它们分配权重：
+
+$$
+w_t=\sum_{i=1}^N p_t^i w_t^i
+$$
+
+直觉是：
+
+> 不知道哪种更新速度最好，那就同时养几只“不同性格”的 draft model，  
+> 再在线选择当前更靠谱的那一个或那几个。
+
+这是很经典的 ensemble / hedge 思想。
+
+* * *
+
+十二、三个推论该怎么讲
+===========
+
+* * *
+
+Corollary 1：OGD 在“环境变化平稳”时有效
+----------------------------
+
+作者定义 path length：
+
+$$
+P_T=\sum_{t=1}^T \|w_{t+1}^\star-w_t^\star\|_2
+$$
+
+它衡量的是：
+
+> 最优 comparator 随时间变化得有多快。
+
+如果  $P_T$  小，说明环境变化比较平稳。  
+这时 OGD 的 regret 比较小，于是加速率也更好。
+
+你可以把它翻译成一句人话：
+
+> **如果用户输入分布变化不太剧烈，那么边跑边学的小模型会越学越好。**
+
+* * *
+
+Corollary 2：hint 准时，optimistic learning 更强
+------------------------------------------
+
+如果历史梯度预测得比较准，也就是
+
+$$
+\sum_{t=1}^T \|h_t-\nabla f_t(w_t)\|_2^2
+$$
+
+比较小，那么 regret 可以进一步下降。
+
+直观地说：
+
+> **如果能提前猜到“下一轮该往哪改”，那 draft model 会适应得更快。**
+
+* * *
+
+Corollary 3：环境剧烈变化时，ensemble 更稳
+-------------------------------
+
+当用户输入跨很多领域、变化很大时，单一学习率很容易不合适。  
+这时 ensemble 的 regret 更优，尤其适合 non-stationary environment。
+
+一句话讲就是：
+
+> **场景越复杂、漂移越大，多模型集成越有优势。**
+
 # 《Fast Inference from Transformers via Speculative Decoding》
 
 Appendix A.1
@@ -1116,14 +1541,13 @@ Appendix A.1
 也就是说，**speculative sampling** 并没有改变最终采样结果的概率分布。
 
 证明：
-\[
-We will now show that for any distributions \(p(x)\) and \(q(x)\), the tokens sampled via speculative sampling from \(p(x)\) and \(q(x)\) are distributed identically to those sampled from \(p(x)\) alone. Let \(\beta\) be the acceptance probability (Definition 3.1).
+
+We will now show that for any distributions \(p(x)\) and \(q(x)\), the tokens sampled via speculative sampling from \(p(x)\) and \(q(x)\) are distributed identically to those sampled from \(p(x)\) alone. Let \(\beta\) be the acceptance probability.
 
 Note that as
 \[
 p'(x) = \text{norm}\left(\max(0, p(x) - q(x))\right) = \frac{p(x) - \min(q(x), p(x))}{\sum_{x'} (p(x') - \min(q(x'), p(x')))} = \frac{p(x) - \min(q(x), p(x))}{1 - \beta},
 \]
-the normalizing constant for the adjusted distribution \(p'(x)\) is \(1 - \beta\), where the last equation follows immediately from Lemma 3.3 and Theorem 3.5.
 
 由于 \(\max (0, a-b)=a-\min (a, b)\) ， “norm” 的意思就是：把一个非负函数除以它在全体 token 上的总和，使它变成一个概率分布。所以分母自然就是：
 \[
@@ -1152,7 +1576,6 @@ P(\text{guess rejected}, x = x') = (1 - \beta) p'(x') = p(x') - \min(q(x'), p(x'
 Overall:
 \[
 P(x = x') = \min(p(x'), q(x')) + p(x') - \min(p(x'), q(x')) = p(x').
-\]
 \]
 
 标准拒绝采样：
@@ -1185,7 +1608,6 @@ P(x = x') = \min(p(x'), q(x')) + p(x') - \min(p(x'), q(x')) = p(x').
 = E_{x \sim q(x)} \min\left(1, \frac{p(x)}{q(x)}\right)
 = \sum_x \min(p(x), q(x))
 \]
-$\square$
 
 对每个 token \(x\)，比较 \(p(x)\) 和 \(q(x)\)。
 
