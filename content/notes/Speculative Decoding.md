@@ -1109,18 +1109,17 @@ $$
 
 # 《When Drafts Evolve: Speculative Decoding Meets Online Learning》
 
-> 大模型生成慢，根本原因是自回归的串行性。  
-> speculative decoding 的基本思路，是让一个小模型先生成一段草稿，再由大模型并行验证。  
-> 传统方法通常把草稿模型当成固定不变的，但这篇文章注意到：每一轮验证其实都已经告诉了我们草稿模型哪里错了，这就是免费的交互反馈。  
-> 作者进一步指出，这个“草稿提交 - 目标验证 - 草稿更新”的过程，天然就是一个在线学习过程。  
-> 所以他们提出 OnlineSPEC，把草稿模型视为 online learner，把目标模型视为 environment，把验证反馈写成 loss function，再用 regret 来分析系统性能。  
-> 理论上，他们证明了 dynamic regret 越小，累计 accepted length 越长；而 accepted length 越长，最终 acceleration rate 越高。  
-> 在算法上，他们分别用 OGD、optimistic online learning 和 ensemble learning 给出了三个实例化版本，适应从平稳环境到剧烈漂移环境的不同场景。  
-> 所以这篇文章最重要的意义不是发明了新的 speculative decoding 结构，而是给“在线更新 draft model”这件事提供了统一框架和理论依据。
+大模型生成慢，根本原因是自回归的串行性。  speculative decoding 的基本思路，是让一个小模型先生成一段草稿，再由大模型并行验证。  传统方法通常把草稿模型当成固定不变的，但这篇文章注意到：每一轮验证其实都已经告诉了我们草稿模型哪里错了，这就是免费的交互反馈。  
 
+作者进一步指出，这个“草稿提交 - 目标验证 - 草稿更新”的过程，天然就是一个在线学习过程。  所以他们提出 OnlineSPEC，把草稿模型视为 online learner，把目标模型视为 environment，把验证反馈写成 loss function，再用 regret 来分析系统性能。  
+
+理论上，他们证明了 dynamic regret 越小，累计 accepted length 越长；而 accepted length 越长，最终 acceleration rate 越高。  
+
+在算法上，他们分别用 OGD、optimistic online learning 和 ensemble learning 给出了三个实例化版本，适应从平稳环境到剧烈漂移环境的不同场景。  
 
 ### 算法
---------
+
+<img width="814" height="526" alt="image" src="https://github.com/user-attachments/assets/9bad3ee6-53c8-49bc-958e-fbe6ad78105e" />
 
 在第  $t$  轮：
 
