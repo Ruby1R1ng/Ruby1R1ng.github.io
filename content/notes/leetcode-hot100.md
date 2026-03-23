@@ -1243,53 +1243,214 @@ result[-1][1]表示最后一个区间的右端点
 
 #### 解题思路：
 
-排序 + 贪心：
+方法 1：切片法
 
-1. 按区间的起始位置排序
-2. 遍历区间，如果当前区间与结果中最后一个区间重叠，则合并
-3. 否则，将当前区间加入结果
-
-#### 复杂度分析：
-
-- 时间复杂度：O(n log n)，排序的时间复杂度
-- 空间复杂度：O(1)，不考虑结果存储的空间
-
-#### Python 解答：
+比如：
 
 ```python
+nums = [1,2,3,4 | 5,6,7], k = 3
+结果 [5,6,7 | 1,2,3,4]
+```
+所以可以直接写成：
+```python
+nums = nums[-k:] + nums[:-k]
+```
+但是题目要求原地修改 nums，所以要写成：
+```python
+nums[:] = nums[-k:] + nums[:-k]
+```
+为什么要先写 k %= n
+
+因为如果 k 比数组长度还大，就会重复轮转。例如：
+```python
+nums = [1,2,3,4,5,6,7], k = 10
+```
+右移 10 次，和右移 10 % 7 = 3 次效果一样。
+
+方法 2：原地反转法
+
+对于右移 k 位：
+- 先整体反转
+- 再反转前 k 个
+- 再反转后 n-k 个
+
+方法 3：暴力轮转法
+
+每次都把最后一个元素拿出来，插到最前面。
+
+#### 复杂度分析：
+方法一：
+- 时间复杂度：O(n)，因为切片和拼接都要遍历数组。
+- 空间复杂度：O(n)，因为新创建了切片数组。
+
+方法二：
+- 时间复杂度：O(n)，因为总共虽然反转了三次，但每个元素参与交换的次数是常数级，总体还是线性。。
+- 空间复杂度：O(1)，因为只用了几个变量，没有额外开辟新数组。。
+
+方法三：
+- 时间复杂度：O(k * n)，因为每次 insert(0, x) 都要移动很多元素。。
+- 空间复杂度：O(1)。
+
+#### Python 解答：
+方法一：
+```python
 class Solution:
-    def merge(self, intervals: list[list[int]]) -> list[list[int]]:
-        # 先按区间左端点排序
-        intervals.sort(key=lambda x: x[0])
+    def rotate(self, nums: list[int], k: int) -> None:
+        n = len(nums)
+        k %= n
+        nums[:] = nums[-k:] + nums[:-k]
+```
+方法二：
+```python
+class Solution:
+    def rotate(self, nums: list[int], k: int) -> None:
+        n = len(nums)
+        k %= n
 
-        # 结果数组，先放入第一个区间
-        res = [intervals[0]]
+        def reverse(left: int, right: int) -> None:
+            while left < right:
+                nums[left], nums[right] = nums[right], nums[left]
+                left += 1
+                right -= 1
 
-        # 遍历后面的区间
-        for start, end in intervals[1:]:
-            last_end = res[-1][1]
+        # 1. 整体反转
+        reverse(0, n - 1)
 
-            # 如果重叠，就合并，合并后的右端点要取更大的那个。
-            if start <= last_end:
-                res[-1][1] = max(last_end, end)
-            else:
-                # 不重叠，直接加入结果
-                res.append([start, end])
+        # 2. 反转前 k 个元素
+        reverse(0, k - 1)
 
-        return res
+        # 3. 反转后 n-k 个元素
+        reverse(k, n - 1)
+```
+方法三：
+```python
+class Solution:
+    def rotate(self, nums: list[int], k: int) -> None:
+        n = len(nums)
+        k %= n
+        for _ in range(k):
+            last = nums.pop()
+            nums.insert(0, last)
 ```
 
 #### 小菲の思考
 
 deque() 是 Python 里的 双端队列。两端都可以高效地插入和删除的队列。普通队列一般是：一端进一端出。但 deque 可以：左边插入、左边删除、右边插入、右边删除，所以叫“双端队列”。
 
-常用操作：右边加入：`q.append(3)`，左边加入：`q.appendleft(3)`，右边删除：`q.pop()`，右边删除：`q.popleft()`
+常用操作：右边加入：`q.append(3)`，左边加入：`q.appendleft(3)`，右边删除：`q.pop()`，左边删除：`q.popleft()`
 
 set添加元素不是append，而是add，删除不是pop而是remove
 
-list 支持这些操作：在末尾添加元素：append()，删除末尾元素：pop()
+list 支持这些操作：在末尾添加元素：append()，删除末尾元素：pop()，左边加入 insert(位置0, 要插入的数)
 
+nums = ...
 
+这是让变量 nums 重新指向一个新列表
+
+nums[:] = ...
+
+这是不换列表本身，只是把这个列表里面的内容整体替换掉
+
+### 189. 除了自身以外数组的乘积
+
+#### 题目描述：
+
+给你一个整数数组 nums，返回 数组 answer ，其中 answer[i] 等于 nums 中除了 nums[i] 之外其余各元素的乘积 。
+
+题目数据保证数组 nums之中任意元素的全部前缀元素和后缀的乘积都在 32 位 整数范围内。
+
+请不要使用除法，且在 O(n) 时间复杂度内完成此题。
+
+#### 示例：
+
+```
+示例 1:
+
+输入: nums = [1,2,3,4]
+输出: [24,12,8,6]
+
+提示：
+
+2 <= nums.length <= 105
+-30 <= nums[i] <= 30
+输入 保证 数组 answer[i] 在  32 位 整数范围内
+```
+
+#### 解题思路：
+最直接的想法是：
+
+对于每个位置 i，都重新遍历整个数组，把除了 i 以外的所有数乘起来。时间复杂度：O(n^2)，因为外层 n 次，内层又 n 次，这不满足题目要求的 O(n)。
+
+对于每个位置 i：`answer[i] = 左边所有数的乘积 × 右边所有数的乘积`，也就是：
+```text
+answer[i] = prefix[i] * suffix[i]
+```
+时间复杂度：O(n)，因为只遍历了几次数组，每次都是线性。空间复杂度：O(n)，因为用了：prefix，suffix，answer
+
+最优思路：把前缀积直接存进 answer 里，然后再用一个变量从右往左维护“后缀积”。
+
+第一步: 先让 answer[i] 存"左边乘积"
+
+例如:
+nums = [1,2,3,4]
+
+我们让:
+answer = [1,1,2,6]
+也就是每个位置左边所有元素的乘积。
+
+第二步: 再从右往左扫, 用一个变量 right 记录右边乘积
+
+初始:
+right = 1
+
+从右向左遍历:
+
+i = 3
+- answer[3] = 6
+- 右边没有数, right = 1
+- 所以 answer[3] = 6 * 1 = 6
+- 更新 right *= nums[3] => right = 4
+
+#### 复杂度分析：
+方法一：
+- 时间复杂度：O(n)，因为只遍历了几次数组，每次都是线性。
+- 空间复杂度：O(1)，因为除了返回用的 answer 数组之外，我们只用了一个变量right，题目说输出数组不算额外空间。
+
+#### Python 解答：
+```python
+class Solution:
+    def productExceptSelf(self, nums: list[int]) -> list[int]:
+        n = len(nums)
+        answer = [1] * n
+
+        # answer[i] 先存 i 左边所有元素的乘积
+        for i in range(1, n):
+            answer[i] = answer[i - 1] * nums[i - 1]
+
+        # right 表示当前位置右边所有元素的乘积
+        right = 1
+        for i in range(n - 1, -1, -1):
+            answer[i] *= right
+            right *= nums[i]
+
+        return answer
+```
+
+#### 小菲の思考
+
+为什么要写2 <= nums.length <= 10^5，因为如果有 10 万个数，O(n^2) 基本就很危险了，这道题大概率必须用 O(n) 或 O(n log n)，不能用 O(n^2)
+
+输入保证数组 answer[i] 在 32 位整数范围内，最终结果不会爆掉。
+
+32 位整数，如果是有符号整数，通常最左边一位用来表示正负号。于是范围是：
+```text
+-2^31 到 2^31 - 1
+```
+64 位有符号整数范围
+```text
+-2^63 到 2^63 - 1
+```
+正数那边少 1是因为有0
 ## 报错类型总结
 
 #### TypeError: Type List cannot be instantiated; use list() instead
