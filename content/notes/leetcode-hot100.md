@@ -1451,6 +1451,9 @@ class Solution:
 -2^63 到 2^63 - 1
 ```
 正数那边少 1是因为有0
+
+`for i in range(n - 1, -1, -1)` 意思是让 i 从 n-1 开始，每次减 1，一直到 0。range(开始, 结束, 步长)
+
 ## 报错类型总结
 
 #### TypeError: Type List cannot be instantiated; use list() instead
@@ -1473,4 +1476,5 @@ def f(nums: List[int]) -> List[str]:
 https://yukinoshitasherry.github.io/Leetcode/
 
 <img width="1568" height="1376" alt="image" src="https://github.com/user-attachments/assets/0c49d4ac-ca79-46ef-9316-07a7051134ff" />
+
 
