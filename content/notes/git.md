@@ -5,13 +5,12 @@ title: "git命令"
 # Git指令
 
 # git 初始化
-Linux/macOS 终端
 ```bash
 git init
 ```
 
 # 创建gitignore
-
+Linux/macOS 终端
 ```bash
 touch .gitignore
 ```
