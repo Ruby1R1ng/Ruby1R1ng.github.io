@@ -60,7 +60,7 @@ git commit -m "Initial commit"
 ```
 给这个远程仓库地址起一个名字，名字叫 origin
 ```bash
-git remote add origin https://github.com/你的用户名/仓库名.git
+git remote add origin https://github.com/你的用户名/仓库名
 ```
 git remote add：添加一个远程仓库
 
