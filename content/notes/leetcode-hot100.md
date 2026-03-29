@@ -1542,6 +1542,99 @@ nums = [1,1]
 ```
 如果没有这个判断，第二个 1 会一直想和第一个 1 换，陷入无限循环。
 
+## 矩阵
+
+### 41. 矩阵置0
+
+#### 题目描述
+
+给定一个 m x n 的矩阵，如果一个元素为 0 ，则将其所在行和列的所有元素都设为 0 。请使用 原地 算法。
+
+一个直观的解决方案是使用  O(mn) 的额外空间，但这并不是一个好的解决方案。
+
+一个简单的改进方案是使用 O(m + n) 的额外空间，但这仍然不是最好的解决方案。
+
+你能想出一个仅使用常量空间的解决方案吗？
+
+#### 示例
+
+<img width="984" height="430" alt="image" src="https://github.com/user-attachments/assets/50351252-c535-402b-b004-0af9c167a82f" />
+
+#### 解题思路
+
+不用额外开两个数组记录“哪些行、哪些列要变 0”，而是直接把“第一行”和“第一列”当标记位。
+
+也就是说：
+
+- 某一行要清零，就把这一行的第一个元素设成 0
+- 某一列要清零，就把这一列的第一个元素设成 0
+
+这样就把记录信息“塞回原矩阵里”了，所以是原地算法，额外空间是 O(1)。
+
+为什么不能一看到 0 就立刻改
+
+比如：
+```text
+1 1 1  
+1 0 1  
+1 1 1
+```
+如果你扫描到中间这个 0，就马上把它所在行列全改成 0，后面再继续扫描时，你会分不清：
+
+- 这个 0 是原来就有的
+- 还是你刚刚改出来的
+
+就会“误伤”更多位置。
+
+所以要分两步：
+
+1. 先记录哪些行列该变 0
+2. 再统一置零
+
+#### 复杂度分析
+
+- 时间复杂度：O(mn)
+- 空间复杂度：O(1)
+
+#### Python 解答
+
+```python
+class Solution:
+    def setZeroes(self, matrix: List[List[int]]) -> None:
+        """
+        Do not return anything, modify matrix in-place instead.
+        """
+        m, n = len(matrix), len(matrix[0])
+
+        # 1. 先记录第一行、第一列原本是否有 0
+        first_row_zero = any(matrix[0][j] == 0 for j in range(n))
+        first_col_zero = any(matrix[i][0] == 0 for i in range(m))
+
+        # 2. 用第一行和第一列作为标记
+        for i in range(1, m):
+            for j in range(1, n):
+                if matrix[i][j] == 0:
+                    matrix[i][0] = 0
+                    matrix[0][j] = 0
+
+        # 3. 根据标记，把内部元素置 0
+        for i in range(1, m):
+            for j in range(1, n):
+                if matrix[i][0] == 0 or matrix[0][j] == 0:
+                    matrix[i][j] = 0
+
+        # 4. 最后处理第一行
+        if first_row_zero:
+            for j in range(n):
+                matrix[0][j] = 0
+
+        # 5. 最后处理第一列
+        if first_col_zero:
+            for i in range(m):
+                matrix[i][0] = 0
+```
+
+
 ## 报错类型总结
 
 #### TypeError: Type List cannot be instantiated; use list() instead
