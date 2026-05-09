@@ -12,7 +12,7 @@ title: "Sigma_modification"
 
 **问题**：一旦存在扰动 \(\eta \neq 0\)（式 8.4.1），这个"纯积分型"更新律会让 \(\theta(t)\) **漂移到无穷**（parameter drift）。课本里 Lyapunov 分析给出了直观解释——
 $$\dot V \le -|\varepsilon_1|(|\varepsilon_1| - d_0)$$，当 \(|\varepsilon_1| < d_0\) 时 \(\dot V\) 可能为正，
-$$\tilde{\theta}$$  无界。
+$\tilde{\theta}$  无界。
 
 **解决思路**：在更新律里加一个把 \(\theta\) 往零拉的"泄漏项" \(-\gamma w\theta\)，把"纯积分"变成"泄漏积分"。只要 \(\theta\) 变得太大，这项就会主导，让 \(\dot V < 0\)，从而保证有界。
 
