@@ -90,7 +90,7 @@ $$\|h_k(\vartheta)\| \leq M_h, \qquad \forall \vartheta \in \mathbb{R}^{d_2}$$
 
 因为 AdamW 没有投影，如果直接假设所有 \(\vartheta\) 上的随机方向全局有界，相当于提前假设了预测误差在全参数空间内有界。
 
-### 方法一
+### 方法一 先找一个估计值的紧集
 
 1. 不再假设 \(h_k(\vartheta)\) 在全空间有界；
 2. 先利用 AdamW 的归一化结构 \(m_k \oslash s_k\) 和 decoupled weight decay 证明 \(\hat{\theta}_k\) 有界；
@@ -107,6 +107,60 @@ $$\|h_k(\vartheta)\| \leq M_h, \qquad \forall \vartheta \in \mathbb{R}^{d_2}$$
 <img width="452" height="271" alt="image" src="https://github.com/user-attachments/assets/d483ae88-0741-4528-abff-613f0e64ead3" />
 
 <img width="741" height="332" alt="image" src="https://github.com/user-attachments/assets/760f9011-f153-48c1-95f7-c85475e62516" />
+
+
+### 方法二 gradient clipping
+
+大模型训练里常见做法是先算梯度，然后裁剪：
+
+$$g_k^{\mathrm{clip}} = \begin{cases} g_k, & \|g_k\| \leq G \\ \dfrac{G}{\|g_k\|} g_k, & \|g_k\| > G \end{cases}$$
+
+然后 AdamW 用
+
+\(g_k^{\mathrm{clip}}\)
+
+来更新 \(m_k, v_k\)。也就是说：
+
+$$m_{k+1} = \beta_1 m_k + (1 - \beta_1) g_k^{\mathrm{clip}}$$
+
+$$v_{k+1} = \beta_2 v_k + (1 - \beta_2) (g_k^{\mathrm{clip}} \odot g_k^{\mathrm{clip}})$$
+
+这和你论文里想要的"方向有界"非常接近，因为它直接给出
+
+\(\|g_k^{\mathrm{clip}}\| \leq G\)
+
+如果多输出方向是
+
+$$h_k = J_k^{\mathrm{T}} \ell_{k+1}$$
+
+那么可以写成
+
+$$\bar{h}_k = \mathcal{C}_G(h_k)$$
+
+其中
+
+$$\mathcal{C}_G(h) = \begin{cases} h, & \|h\| \leq G \\ \dfrac{G}{\|h\|} h, & \|h\| > G \end{cases}$$
+
+于是自动有
+
+$$\|\bar{h}_k\| \leq G$$
+
+这样你的理论里就可以把
+
+\(M_h\)
+
+直接取为
+
+\(M_h = G\)
+
+
+
+
+
+
+
+
+
 
 ### 方法二
 
