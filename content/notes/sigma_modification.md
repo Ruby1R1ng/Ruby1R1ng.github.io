@@ -12,7 +12,7 @@ title: "Sigma_modification"
 
 **问题**：一旦存在扰动 \(\eta \neq 0\)（式 8.4.1），这个"纯积分型"更新律会让 \(\theta(t)\) **漂移到无穷**（parameter drift）。课本里 Lyapunov 分析给出了直观解释——
 $$\dot V \le -|\varepsilon_1|(|\varepsilon_1| - d_0)$$，当 \(|\varepsilon_1| < d_0\) 时 \(\dot V\) 可能为正，
-$\tilde{\theta}$  无界。
+\(\tilde{\theta}\)  无界。
 
 **解决思路**：在更新律里加一个把 \(\theta\) 往零拉的"泄漏项" \(-\gamma w\theta\)，把"纯积分"变成"泄漏积分"。只要 \(\theta\) 变得太大，这项就会主导，让 \(\dot V < 0\)，从而保证有界。
 
@@ -90,10 +90,69 @@ $$\|h_k(\vartheta)\| \leq M_h, \qquad \forall \vartheta \in \mathbb{R}^{d_2}$$
 
 因为 AdamW 没有投影，如果直接假设所有 \(\vartheta\) 上的随机方向全局有界，相当于提前假设了预测误差在全参数空间内有界。
 
-### 更好的处理方式
+### 方法一
 
-1. **不再假设** \(h_k(\vartheta)\) **在全空间有界**；
+1. 不再假设 \(h_k(\vartheta)\) 在全空间有界；
 2. 先利用 AdamW 的归一化结构 \(m_k \oslash s_k\) 和 decoupled weight decay 证明 \(\hat{\theta}_k\) 有界；
 3. 再只要求在证明得到的紧集 \(D_*\) 上，\(h_k(\theta)\)、\(w_{k+1}(\theta)\) 有界或二阶矩有界。
+
+**对原始无投影 AdamW，如果不假设方向有界，也不修改算法，一般不可能得到一个不随 \(\beta_2 \rightarrow 1\) 发散的确定性界。**
+
+
+<img width="466" height="289" alt="image" src="https://github.com/user-attachments/assets/8cb13227-1057-49c6-9c7d-7a593b0c0ad1" />
+
+### 证明
+
+<img width="468" height="914" alt="image" src="https://github.com/user-attachments/assets/0f08069f-7edf-4fc7-b946-e1bc101d86b0" />
+<img width="452" height="271" alt="image" src="https://github.com/user-attachments/assets/d483ae88-0741-4528-abff-613f0e64ead3" />
+
+<img width="741" height="332" alt="image" src="https://github.com/user-attachments/assets/760f9011-f153-48c1-95f7-c85475e62516" />
+
+### 方法二
+
+把 AdamW 更新改成 bounded-update AdamW：
+
+$$u_{k+1} \triangleq \bar{V}_{k+1}^{\frac{1}{2}} m_{k+1},$$
+
+然后定义截断算子
+
+$$\mathcal{C}_B(u) \triangleq \begin{cases} u, & \|u\| \leq B, \\ \dfrac{B}{\|u\|} u, & \|u\| > B, \end{cases}$$
+
+其中 \(B > 0\) 是你可以自己选的超参数。算法更新改为
+
+$$\hat{\theta}_{k+1} = (1 - \alpha \lambda_{\mathrm{wd}}) \hat{\theta}_k - \alpha \mathcal{C}_B(u_{k+1}).$$
+
+这样有
+
+$$\|\mathcal{C}_B(u_{k+1})\| \leq B.$$
+
+于是直接得到
+
+$$\|\hat{\theta}_{k+1}\| \leq (1 - \alpha \lambda_{\mathrm{wd}}) \|\hat{\theta}_k\| + \alpha B.$$
+
+令
+
+$$\rho = 1 - \alpha \lambda_{\mathrm{wd}},$$
+
+则
+
+$$\|\hat{\theta}_{k+1}\| \leq \rho \|\hat{\theta}_k\| + \alpha B.$$
+
+迭代可得
+
+$$\|\hat{\theta}_k\| \leq \rho^k \|\hat{\theta}_0\| + \alpha B \sum_{t=0}^{k-1} \rho^t.$$
+
+因为
+
+$$1 - \rho = \alpha \lambda_{\mathrm{wd}},$$
+
+所以
+
+$$\alpha B \sum_{t=0}^{k-1} \rho^t = \frac{\alpha B (1 - \rho^k)}{1 - \rho} = \frac{B}{\lambda_{\mathrm{wd}}} (1 - \rho^k).$$
+
+因此
+
+$$\boxed{\|\hat{\theta}_k\| \leq \max\left\{\|\hat{\theta}_0\|,\ \frac{B}{\lambda_{\mathrm{wd}}}\right\}, \qquad k \geq 0.}$$
+
 
 
