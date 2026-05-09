@@ -110,41 +110,49 @@ $$\|h_k(\vartheta)\| \leq M_h, \qquad \forall \vartheta \in \mathbb{R}^{d_2}$$
 
 ### 方法二
 
-建议把 AdamW 更新改成 bounded-update AdamW：
+把 AdamW 更新改成 bounded-update AdamW：
 
-$$u_{k+1} \triangleq \bar{V}_{k+1}^{1/2} m_{k+1}$$
+$$u_{k+1} \triangleq \bar{V}_{k+1}^{\frac{1}{2}} m_{k+1},$$
 
 然后定义截断算子
 
-$$\mathcal{C}_B(u) \triangleq \begin{cases} u, & \|u\| \leq B \\ \dfrac{B}{\|u\|} u, & \|u\| > B \end{cases}$$
+$$\mathcal{C}_B(u) \triangleq \begin{cases} u, & \|u\| \leq B, \\ \dfrac{B}{\|u\|} u, & \|u\| > B, \end{cases}$$
 
-其中 \(B > 0\) 是你可以自己选的超参数。算法更新改为
+其中 \(B > 0\) 是可以自己选的超参数。算法更新改为
 
-$$\hat{\theta}_{k+1} = (1 - \alpha \lambda_{\mathrm{wd}}) \hat{\theta}_k - \alpha \mathcal{C}_B(u_{k+1})$$
+$$\hat{\theta}_{k+1} = (1 - \alpha \lambda_{\mathrm{wd}}) \hat{\theta}_k - \alpha \mathcal{C}_B(u_{k+1}).$$
 
 这样有
 
-$$\|\mathcal{C}_B(u_{k+1})\| \leq B$$
+$$\|\mathcal{C}_B(u_{k+1})\| \leq B.$$
 
 于是直接得到
 
-$$\|\hat{\theta}_{k+1}\| \leq (1 - \alpha \lambda_{\mathrm{wd}}) \|\hat{\theta}_k\| + \alpha B$$
+$$\|\hat{\theta}_{k+1}\| \leq (1 - \alpha \lambda_{\mathrm{wd}}) \|\hat{\theta}_k\| + \alpha B.$$
 
-令 \(\rho = 1 - \alpha \lambda_{\mathrm{wd}}\)，则
+令
 
-$$\|\hat{\theta}_{k+1}\| \leq \rho \|\hat{\theta}_k\| + \alpha B$$
+$$\rho = 1 - \alpha \lambda_{\mathrm{wd}},$$
+
+则
+
+$$\|\hat{\theta}_{k+1}\| \leq \rho \|\hat{\theta}_k\| + \alpha B.$$
 
 迭代可得
 
-$$\|\hat{\theta}_k\| \leq \rho^k \|\hat{\theta}_0\| + \alpha B \sum_{t=0}^{k-1} \rho^t$$
+$$\|\hat{\theta}_k\| \leq \rho^k \|\hat{\theta}_0\| + \alpha B \sum_{t=0}^{k-1} \rho^t.$$
 
-因为 \(1 - \rho = \alpha \lambda_{\mathrm{wd}}\)，所以
+因为
 
-$$\alpha B \sum_{t=0}^{k-1} \rho^t = \frac{\alpha B (1 - \rho^k)}{1 - \rho} = \frac{B}{\lambda_{\mathrm{wd}}} (1 - \rho^k)$$
+$$1 - \rho = \alpha \lambda_{\mathrm{wd}},$$
+
+所以
+
+$$\alpha B \sum_{t=0}^{k-1} \rho^t = \frac{\alpha B (1 - \rho^k)}{1 - \rho} = \frac{B}{\lambda_{\mathrm{wd}}} (1 - \rho^k).$$
 
 因此
 
-$$\|\hat{\theta}_k\| \leq \max\left\{\|\hat{\theta}_0\|,\ \frac{B}{\lambda_{\mathrm{wd}}}\right\}, \qquad k \geq 0$$
+$$\boxed{\|\hat{\theta}_k\| \leq \max\left\{\|\hat{\theta}_0\|,\ \frac{B}{\lambda_{\mathrm{wd}}}\right\}, \qquad k \geq 0.}$$
 
 
 
