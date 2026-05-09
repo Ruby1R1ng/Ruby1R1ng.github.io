@@ -72,3 +72,26 @@ $\varepsilon_1 \to 0$ 才成立，从而 $w(t) \to 0$，恢复理想性质。
 | Switching σ | 取决于 $\|\theta\|$ 是否越界 | $M_0 > \|\theta^*\|$ | ✅ | ✅（无条件）|
 | $\varepsilon_1$-mod | $\|\varepsilon_1\|\nu_0$ | 无 | ✅ | ⚠️（需 PE）|
 
+
+
+
+#  Towards Understanding Convergence and Generalization of AdamW
+<img width="1015" height="260" alt="image" src="https://github.com/user-attachments/assets/63b8663d-196d-4bcd-bb6e-e010c86c68c0" />
+假设 随机梯度的ℓ∞-范数有界
+<img width="762" height="128" alt="image" src="https://github.com/user-attachments/assets/5e0e8a9e-916e-4939-8277-e49b73d95615" />
+
+# AdamW关于有界假设的改进
+
+### 问题：原假设过强
+
+$$\|h_k(\vartheta)\| \leq M_h, \qquad \forall \vartheta \in \mathbb{R}^{d_2}$$
+
+因为 AdamW 没有投影，如果直接假设所有 $\vartheta$ 上的随机方向全局有界，相当于提前假设了预测误差在全参数空间内有界。
+
+### 更好的处理方式
+
+1. **不再假设** $h_k(\vartheta)$ **在全空间有界**；
+2. 先利用 AdamW 的归一化结构 $m_k \oslash s_k$ 和 decoupled weight decay 证明 $\hat{\theta}_k$ 有界；
+3. 再只要求在证明得到的紧集 $D_*$ 上，$h_k(\theta)$、$w_{k+1}(\theta)$ 有界或二阶矩有界。
+
+
